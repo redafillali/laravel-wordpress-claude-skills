@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: hacked-site-redirects
+expected_outcome: |
+  Ordered incident response: forensic backup first, checksums, find modified files/PHP in uploads, rogue admins/cron/options, logs to find entry point, reinstall from official sources, rotate secrets/salts, harden, Search Console review.

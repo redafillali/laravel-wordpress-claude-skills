@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: refactor-legacy-function
+expected_outcome: |
+  Diagnosis + refactored code with keyed lookup, no array_merge in loop, guard clauses, enum/split for $type, side effect extracted, strict comparisons, tests.

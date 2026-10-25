@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: wordpress-elementor-lcp
+expected_outcome: |
+  Prioritized plan addressing LCP (slider background image, page cache, TTFB), INP (third-party scripts, JS), CLS (dimensions, fonts, banners), with WP/Elementor specifics and verification via field data.

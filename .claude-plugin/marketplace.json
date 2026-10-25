@@ -4,13 +4,13 @@
     "name": "Reda El Fillali"
   },
   "metadata": {
-    "description": "Claude skills for Laravel and WordPress developers: coding standards, security, testing, WP-to-Laravel migration, deployment and technical SEO.",
-    "version": "1.0.0"
+    "description": "Claude skills for Laravel and WordPress developers: coding standards, security audits and hardening, performance and MySQL tuning, code optimization, Core Web Vitals, WP-to-Laravel migration, deployment and technical SEO.",
+    "version": "1.1.0"
   },
   "plugins": [
     {
       "name": "laravel-wordpress-skills",
-      "description": "Laravel & WordPress development, migration, deployment and technical SEO skills.",
+      "description": "Laravel & WordPress development, security, performance, SEO, migration and deployment skills.",
       "source": "./",
       "strict": false,
       "skills": [
@@ -18,7 +18,13 @@
         "./skills/wordpress-development",
         "./skills/wp-to-laravel-migration",
         "./skills/php-deploy-github-actions",
-        "./skills/technical-seo-php"
+        "./skills/technical-seo-php",
+        "./skills/laravel-performance-tuning",
+        "./skills/mysql-optimization",
+        "./skills/php-code-optimization",
+        "./skills/php-security-audit",
+        "./skills/wordpress-security-hardening",
+        "./skills/core-web-vitals-optimization"
       ]
     }
   ]

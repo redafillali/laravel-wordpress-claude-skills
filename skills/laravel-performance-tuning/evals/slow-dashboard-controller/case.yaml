@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: slow-dashboard-controller
+expected_outcome: |
+  The answer removes Order::all()/Customer::all() loading, fixes N+1 with eager loading, uses DB aggregates, proposes indexes and caching, and explains how to measure.
