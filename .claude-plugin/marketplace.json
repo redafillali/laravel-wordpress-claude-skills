@@ -1,7 +1,8 @@
 {
   "name": "laravel-wordpress-claude-skills",
   "owner": {
-    "name": "Reda El Fillali"
+    "name": "Reda El Fillali",
+    "url": "https://github.com/redafillali"
   },
   "metadata": {
     "description": "Claude skills for Laravel and WordPress developers: coding standards, security audits and hardening, performance and MySQL tuning, code optimization, Core Web Vitals, WP-to-Laravel migration, deployment and technical SEO.",
@@ -25,6 +26,24 @@
         "./skills/php-security-audit",
         "./skills/wordpress-security-hardening",
         "./skills/core-web-vitals-optimization"
+      ],
+      "author": {
+        "name": "Reda El Fillali",
+        "url": "https://github.com/redafillali"
+      },
+      "homepage": "https://github.com/redafillali/laravel-wordpress-claude-skills",
+      "repository": "https://github.com/redafillali/laravel-wordpress-claude-skills",
+      "license": "MIT",
+      "keywords": [
+        "laravel",
+        "wordpress",
+        "php",
+        "security",
+        "performance",
+        "mysql",
+        "seo",
+        "core-web-vitals",
+        "github-actions"
       ]
     }
   ]

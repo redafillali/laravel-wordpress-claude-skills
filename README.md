@@ -1,8 +1,27 @@
 # Claude Skills for Laravel & WordPress Developers
 
-A curated set of [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) that make Claude a better pair-programmer for PHP shops building with **Laravel** and **WordPress** — from day-to-day coding, security audits and performance tuning to migrating a WordPress site to Laravel, deploying it, and keeping its SEO intact.
+[![Validate skills](https://github.com/redafillali/laravel-wordpress-claude-skills/actions/workflows/validate.yml/badge.svg)](https://github.com/redafillali/laravel-wordpress-claude-skills/actions/workflows/validate.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![Skills](https://img.shields.io/badge/skills-11-8A2BE2)
+![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?logo=php&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-11%2B-FF2D20?logo=laravel&logoColor=white)
+![WordPress](https://img.shields.io/badge/WordPress-6.x-21759B?logo=wordpress&logoColor=white)
+
+A curated set of [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) that make Claude a better pair-programmer for PHP teams building with **Laravel** and **WordPress** — from day-to-day coding, security audits and performance tuning to migrating a WordPress site to Laravel, deploying it, and keeping its SEO intact.
 
 > 🇫🇷 Une version française de ce README est disponible plus bas : [Version française](#-version-française).
+
+## Table of contents
+
+- [Skills](#skills)
+- [Installation](#installation)
+- [Usage examples](#usage-examples)
+- [How skills work](#how-skills-work)
+- [Repository layout](#repository-layout)
+- [Testing & validation](#testing--validation)
+- [Contributing](#contributing)
+- [License](#license)
+- [Version française](#-version-française)
 
 ## Skills
 
@@ -22,42 +41,70 @@ A curated set of [Agent Skills](https://docs.claude.com/en/docs/agents-and-tools
 
 ## Installation
 
-### Claude Code (plugin marketplace)
+### Claude Code — plugin marketplace (recommended)
+
+Inside Claude Code:
 
 ```bash
-/plugin marketplace add <your-github-username>/laravel-wordpress-claude-skills
+/plugin marketplace add redafillali/laravel-wordpress-claude-skills
 /plugin install laravel-wordpress-skills@laravel-wordpress-claude-skills
 ```
 
-### Claude Code (manual)
+This installs all 11 skills. Update later with `/plugin marketplace update laravel-wordpress-claude-skills`.
 
-Copy any skill folder into your personal or project skills directory:
+### Claude Code — manual
 
 ```bash
-# personal (all projects)
-cp -r skills/laravel-development ~/.claude/skills/
-# project only
-cp -r skills/laravel-development .claude/skills/
+git clone https://github.com/redafillali/laravel-wordpress-claude-skills.git
+cd laravel-wordpress-claude-skills
+
+# all projects (personal skills)
+cp -r skills/* ~/.claude/skills/
+
+# or a single project
+mkdir -p /path/to/project/.claude/skills
+cp -r skills/laravel-development /path/to/project/.claude/skills/
 ```
 
 ### Claude.ai / Claude desktop
 
-Zip a skill folder (the folder itself, containing `SKILL.md`) and upload it in **Settings → Capabilities → Skills**.
+Zip a skill folder (the folder itself, containing `SKILL.md`) and upload it in **Settings → Capabilities → Skills**:
 
 ```bash
 cd skills && zip -r laravel-development.zip laravel-development
 ```
 
+Or download the repository as a ZIP from [GitHub](https://github.com/redafillali/laravel-wordpress-claude-skills/archive/refs/heads/main.zip) and zip the skill folders you need.
+
 ### Claude API
 
 Upload skills through the Skills API — see the [Agent Skills documentation](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview).
+
+## Usage examples
+
+Skills load automatically when your request matches their description — no special syntax needed:
+
+| You ask | Skill used |
+|---|---|
+| "My Laravel dashboard takes 6 s to load, here's the controller…" | `laravel-performance-tuning` |
+| "This WooCommerce query takes 3 s, which index should I add?" | `mysql-optimization` |
+| "Can you security-review this controller before we go live?" | `php-security-audit` |
+| "My client's WordPress redirects mobile visitors to a casino site" | `wordpress-security-hardening` |
+| "PageSpeed mobile is 34, LCP is 5.8 s on our Elementor homepage" | `core-web-vitals-optimization` |
+| "Refactor this legacy PHP function" | `php-code-optimization` |
+| "Set up a GitHub Actions deploy over FTP to my VPS" | `php-deploy-github-actions` |
+| "Plan the migration of our WordPress site to Laravel without losing SEO" | `wp-to-laravel-migration` + `technical-seo-php` |
+
+## How skills work
+
+Each skill is a folder with a `SKILL.md`: YAML frontmatter (`name`, `description`) plus instructions. Claude always sees the short description and loads the full instructions only when relevant; deeper material in `references/` is read on demand, and `assets/` holds templates (workflows, boilerplate) to copy into your projects. This keeps context small while giving Claude expert, opinionated guidance when it needs it.
 
 ## Repository layout
 
 ```
 .
 ├── .claude-plugin/marketplace.json   # Claude Code plugin marketplace manifest
-├── .github/workflows/validate.yml    # CI: validates every SKILL.md
+├── .github/workflows/validate.yml    # CI: validates every SKILL.md on push/PR
 ├── scripts/validate_skills.py        # Local validator (same as CI)
 └── skills/
     └── <skill-name>/
@@ -67,16 +114,25 @@ Upload skills through the Skills API — see the [Agent Skills documentation](ht
         └── evals/                    # Test cases (runnable with `claude plugin eval`)
 ```
 
-## Validate locally
+## Testing & validation
+
+Validate structure and frontmatter (also runs in CI):
 
 ```bash
 pip install pyyaml
 python scripts/validate_skills.py
 ```
 
+Run a skill's test cases with and without the skill (Claude Code, billed model runs):
+
+```bash
+cd skills/php-security-audit
+claude plugin eval . --allow-tools Write,Edit,Bash
+```
+
 ## Contributing
 
-Contributions are welcome — new skills, fixes, better examples. Read [CONTRIBUTING.md](CONTRIBUTING.md) first.
+Contributions are welcome — new skills, fixes, better examples or harder test cases. Read [CONTRIBUTING.md](CONTRIBUTING.md), then open an [issue](https://github.com/redafillali/laravel-wordpress-claude-skills/issues) or a [pull request](https://github.com/redafillali/laravel-wordpress-claude-skills/pulls).
 
 ## License
 
@@ -86,18 +142,29 @@ Contributions are welcome — new skills, fixes, better examples. Read [CONTRIBU
 
 ## 🇫🇷 Version française
 
-Un ensemble de **skills Claude** pour les développeurs PHP qui travaillent avec **Laravel** et **WordPress** : conventions de code, sécurité, tests, migration WordPress → Laravel, déploiement via GitHub Actions et SEO technique.
+Un ensemble de **skills Claude** pour les développeurs PHP qui travaillent avec **Laravel** et **WordPress** : conventions de code, sécurité, performance, optimisation MySQL, refactoring, Core Web Vitals, migration WordPress → Laravel, déploiement via GitHub Actions et SEO technique.
+
+### Les skills
 
 - **laravel-development** — conventions, Eloquent (N+1, index), validation, sécurité, tests Pest/PHPUnit.
 - **wordpress-development** — thèmes et plugins sécurisés : hooks, nonces, sanitize/escape, REST API, WP-CLI.
 - **wp-to-laravel-migration** — méthode complète pour migrer un site WordPress vers Laravel sans perdre contenus, URLs ni positions SEO.
 - **php-deploy-github-actions** — déploiement FTP/SFTP ou SSH + rsync vers mutualisé ou VPS, workflows prêts à l'emploi.
-- **technical-seo-php** — balises meta, canonicals, sitemaps, schema.org, redirections 301, Core Web Vitals.
-
+- **technical-seo-php** — balises meta, canonicals, sitemaps, schema.org, redirections 301.
 - **laravel-performance-tuning** — diagnostic de lenteurs Laravel (mesure d'abord), cache, queues, OPcache, PHP-FPM, Octane.
 - **mysql-optimization** — requêtes lentes, EXPLAIN, index, optimisation de la base WordPress, réglages InnoDB.
 - **php-code-optimization** — refactoring sans régression, modernisation PHP 8.x, Rector/PHPStan/Pint.
 - **php-security-audit** — audit OWASP Top 10 avec rapport classé par sévérité.
 - **wordpress-security-hardening** — durcissement WordPress et procédure de nettoyage d'un site piraté.
 - **core-web-vitals-optimization** — LCP, INP, CLS pour Laravel et WordPress.
-Installation : voir la section [Installation](#installation) ci-dessus. Les contributions sont les bienvenues.
+
+### Installation rapide (Claude Code)
+
+```bash
+/plugin marketplace add redafillali/laravel-wordpress-claude-skills
+/plugin install laravel-wordpress-skills@laravel-wordpress-claude-skills
+```
+
+Pour Claude.ai ou l'application de bureau : zippez le dossier d'un skill et importez-le dans **Paramètres → Capacités → Skills**. Les skills se déclenchent automatiquement selon votre demande.
+
+Dépôt : https://github.com/redafillali/laravel-wordpress-claude-skills — les contributions sont les bienvenues ([issues](https://github.com/redafillali/laravel-wordpress-claude-skills/issues)).
