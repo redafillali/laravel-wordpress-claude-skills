@@ -1,0 +1,25 @@
+{
+  "name": "laravel-wordpress-claude-skills",
+  "owner": {
+    "name": "Reda El Fillali"
+  },
+  "metadata": {
+    "description": "Claude skills for Laravel and WordPress developers: coding standards, security, testing, WP-to-Laravel migration, deployment and technical SEO.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "laravel-wordpress-skills",
+      "description": "Laravel & WordPress development, migration, deployment and technical SEO skills.",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/laravel-development",
+        "./skills/wordpress-development",
+        "./skills/wp-to-laravel-migration",
+        "./skills/php-deploy-github-actions",
+        "./skills/technical-seo-php"
+      ]
+    }
+  ]
+}

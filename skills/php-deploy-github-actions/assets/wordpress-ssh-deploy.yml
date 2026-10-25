@@ -1,0 +1,58 @@
+# Deploy a WordPress custom theme + custom plugins via rsync over SSH.
+# Core, third-party plugins and uploads are NOT managed here (update them with WP-CLI / admin).
+# Secrets: SSH_PRIVATE_KEY, SSH_HOST, SSH_USER, SSH_KNOWN_HOSTS
+name: Deploy (WordPress, SSH)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-wp
+  cancel-in-progress: false
+
+env:
+  WP_PATH: /var/www/site/public_html
+  THEME: my-theme
+  PLUGINS: "my-plugin"      # space-separated list of custom plugins in this repo
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build theme assets
+        working-directory: wp-content/themes/${{ env.THEME }}
+        run: |
+          if [ -f package.json ]; then npm ci && npm run build; fi
+          if [ -f composer.json ]; then composer install --no-dev --optimize-autoloader; fi
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy && chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+
+      - name: Rsync theme and plugins
+        env:
+          SSH: ssh -i ~/.ssh/id_deploy
+          TARGET: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+        run: |
+          rsync -az --delete -e "$SSH" --exclude='node_modules' --exclude='.git*' \
+            wp-content/themes/$THEME/ $TARGET:$WP_PATH/wp-content/themes/$THEME/
+          for p in $PLUGINS; do
+            rsync -az --delete -e "$SSH" --exclude='node_modules' --exclude='.git*' \
+              wp-content/plugins/$p/ $TARGET:$WP_PATH/wp-content/plugins/$p/
+          done
+
+      - name: Flush caches
+        run: |
+          ssh -i ~/.ssh/id_deploy ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "cd $WP_PATH && wp cache flush && wp rewrite flush" || true

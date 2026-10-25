@@ -1,0 +1,58 @@
+# Build then sync over FTP/FTPS (shared hosting, Virtualmin/cPanel FTP accounts)
+# Secrets: FTP_SERVER, FTP_USERNAME, FTP_PASSWORD
+# Uploads only changed files (state file kept on the server: .ftp-deploy-sync-state.json)
+name: Deploy (FTP)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-ftp
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      # --- Laravel: build vendor + assets in CI (delete for a plain WP theme) ---
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          coverage: none
+      - run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci && npm run build
+
+      - name: FTP sync
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          protocol: ftps            # ftp | ftps | ftps-legacy — try ftp if TLS handshake fails
+          port: 21
+          local-dir: ./             # WordPress theme example: ./wp-content/themes/my-theme/
+          server-dir: ./            # path relative to the FTP account root, MUST end with /
+          timeout: 120000
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+            **/tests/**
+            .env
+            .env.*
+            storage/**
+            wp-config.php
+            wp-content/uploads/**
+            .ftp-deploy-sync-state.json
+          # dry-run: true          # uncomment to preview the changes
+
+      # FTP can't run commands. For Laravel post-deploy tasks (migrate, optimize),
+      # call a secret, rate-limited route or let a server cron detect a new version file.

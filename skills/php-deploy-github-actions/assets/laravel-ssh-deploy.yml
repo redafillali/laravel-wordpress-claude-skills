@@ -1,0 +1,102 @@
+# Laravel zero-downtime deploy over SSH + rsync
+# Secrets: SSH_PRIVATE_KEY, SSH_HOST, SSH_USER, SSH_KNOWN_HOSTS (output of `ssh-keyscan -H your-host`, verified)
+name: Deploy (Laravel, SSH)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  PHP_VERSION: "8.3"
+  APP_PATH: /var/www/app          # contains releases/, shared/, current
+  KEEP_RELEASES: 5
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, intl, pdo_sqlite, bcmath
+          coverage: none
+      - run: composer install --no-interaction --prefer-dist
+      - run: cp .env.example .env && php artisan key:generate
+      - run: php artisan test
+
+  deploy:
+    needs: tests
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          coverage: none
+
+      - name: Install PHP dependencies (prod)
+        run: composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Build assets
+        run: npm ci && npm run build
+
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" > ~/.ssh/known_hosts
+          cat >> ~/.ssh/config <<EOF
+          Host deploy-target
+            HostName ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USER }}
+            IdentityFile ~/.ssh/id_deploy
+          EOF
+
+      - name: Upload release
+        id: release
+        run: |
+          RELEASE=$(date -u +%Y%m%d%H%M%S)
+          echo "name=$RELEASE" >> "$GITHUB_OUTPUT"
+          ssh deploy-target "mkdir -p $APP_PATH/releases/$RELEASE"
+          rsync -az --delete \
+            --exclude='.git' --exclude='.github' --exclude='node_modules' \
+            --exclude='.env' --exclude='storage' --exclude='tests' \
+            ./ deploy-target:$APP_PATH/releases/$RELEASE/
+
+      - name: Activate release
+        env:
+          RELEASE: ${{ steps.release.outputs.name }}
+        run: |
+          ssh deploy-target bash -s <<EOF
+          set -euo pipefail
+          cd $APP_PATH/releases/$RELEASE
+          ln -sfn $APP_PATH/shared/.env .env
+          rm -rf storage && ln -sfn $APP_PATH/shared/storage storage
+          php artisan migrate --force
+          php artisan optimize
+          php artisan storage:link || true
+          ln -sfn $APP_PATH/releases/$RELEASE $APP_PATH/current
+          php artisan queue:restart || true
+          cd $APP_PATH/releases && ls -1t | tail -n +$(( $KEEP_RELEASES + 1 )) | xargs -r rm -rf
+          EOF
+
+      # Optional: reload PHP-FPM so OPcache picks up the new symlink target
+      # (requires a sudoers rule for the deploy user).
+      # - run: ssh deploy-target "sudo systemctl reload php${{ env.PHP_VERSION }}-fpm"
+
+      - name: Smoke test
+        run: curl -fsS -o /dev/null -w "%{http_code}\n" https://example.com/up
